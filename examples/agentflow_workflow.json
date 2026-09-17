@@ -1,0 +1,27 @@
+{
+  "name": "eval-demo",
+  "version": "1.0",
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "text_input",
+      "name": "输入",
+      "config": {},
+      "depends_on": []
+    },
+    {
+      "id": "n2",
+      "type": "transform",
+      "name": "转大写",
+      "config": {"op": "upper"},
+      "depends_on": ["n1"]
+    },
+    {
+      "id": "n3",
+      "type": "transform",
+      "name": "替换敏感词",
+      "config": {"op": "replace", "old": "HELLO", "new": "HI"},
+      "depends_on": ["n2"]
+    }
+  ]
+}

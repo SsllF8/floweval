@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+floweval.db
+demo_output/
+.pytest_cache/
+web/data/
+*.egg-info/
+build/
+dist/

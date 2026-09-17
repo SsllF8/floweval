@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "floweval"
+version = "0.1.0"
+description = "面向多节点 Agent 流水线的评测与上线判定工具：节点级归因 + 回归对比 + CI 可用的发布门槛"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+llm = ["openai>=1.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+floweval = "floweval.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["floweval*"]
