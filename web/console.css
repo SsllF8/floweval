@@ -1,0 +1,260 @@
+/* FlowEval 控制台样式
+   复用 styles.css 的 token（Canvas / Paper / Ink / Hairline / Ember），
+   这里只补控制台特有的控件：表单、被测对象卡片、进度条、结果面板。 */
+
+/* form-grid / field 的 display 会盖掉 hidden 属性的默认 display:none，
+   不加这条，折叠区块会一直显示 */
+[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------- 按钮 */
+
+.btn {
+  appearance: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--radius-buttons);
+  padding: 8px 16px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, opacity .12s ease;
+}
+.btn:hover { background: var(--color-canvas); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+  padding: 10px 22px;
+}
+.btn-primary:hover { background: var(--color-ink-soft); }
+
+.btn-ghost { border-color: transparent; background: transparent; color: var(--color-mid-gray); }
+.btn-ghost:hover { background: var(--color-canvas); color: var(--color-ink); }
+
+.btn-danger { color: var(--color-ember); border-color: var(--color-ember); background: transparent; }
+.btn-danger:hover { background: rgba(231, 0, 11, 0.06); }
+
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+
+/* ---------------------------------------------------------------- 表单 */
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+}
+.field-label .req { color: var(--color-ember); margin-left: 2px; }
+
+.field-help { font-size: 12px; line-height: 1.4; color: var(--color-mid-gray); }
+
+.input,
+.textarea,
+.select {
+  appearance: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-inputs);
+  padding: 8px 12px;
+  width: 100%;
+  outline: none;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.input:focus,
+.textarea:focus,
+.select:focus {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.06);
+}
+.input::placeholder, .textarea::placeholder { color: var(--color-mid-gray); }
+
+.textarea { min-height: 84px; resize: vertical; line-height: 1.5; font-size: 13px; }
+.textarea.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+.select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; }
+.form-grid .span-2 { grid-column: 1 / -1; }
+
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .span-2 { grid-column: auto; }
+}
+
+/* ---------------------------------------------------------------- 步骤卡 */
+
+.step-card { margin-bottom: 16px; }
+
+/* card-head 默认 space-between 是给"标题 + 右侧操作"用的，
+   步骤卡是"序号 + 标题"，要靠左排 */
+.step-card .card-head { justify-content: flex-start; gap: 12px; }
+
+.step-no {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.divider-text {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  font-size: 12px;
+  color: var(--color-mid-gray);
+}
+.divider-text::before,
+.divider-text::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--color-hairline);
+}
+
+.inline-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.inline-row .field { flex: 1; min-width: 180px; }
+
+/* ---------------------------------------------------------------- 被测对象卡片 */
+
+.target-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+
+.target-card {
+  text-align: left;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-nested);
+  background: var(--color-paper);
+  padding: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.target-card:hover { border-color: var(--color-mid-gray); }
+.target-card.is-active {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 1px var(--color-ink);
+}
+
+.target-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.target-card-name { font-size: 14px; font-weight: 600; }
+.target-card-desc { margin-top: 6px; font-size: 12px; line-height: 1.45; color: var(--color-mid-gray); }
+
+/* ---------------------------------------------------------------- 运行条 */
+
+.run-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-cards);
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.run-progress { flex: 1; min-width: 240px; }
+
+.progress-track {
+  height: 6px;
+  background: var(--color-canvas);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--color-ink);
+  border-radius: 999px;
+  transition: width .2s ease;
+}
+.progress-fill.is-error { background: var(--color-ember); }
+
+.progress-text { margin-top: 6px; font-size: 12px; color: var(--color-mid-gray); }
+.progress-text.is-error { color: var(--color-ember); }
+
+/* ---------------------------------------------------------------- 结果面板 */
+
+.result-panel { margin-top: 20px; }
+
+.result-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.result-verdict { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.result-verdict.is-fail { color: var(--color-ember); }
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.blame-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: 14px;
+}
+.blame-row:last-child { border-bottom: none; }
+
+/* ---------------------------------------------------------------- 历史 */
+
+.run-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: 14px;
+}
+.run-row:last-child { border-bottom: none; }
+.run-row-id { font-weight: 500; width: 240px; flex: 0 0 240px; word-break: break-all; font-size: 13px; }
+.run-row-target { flex: 1; min-width: 0; color: var(--color-mid-gray); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.run-row-num { width: 76px; text-align: right; font-variant-numeric: tabular-nums; }
+.run-row-actions { display: flex; gap: 6px; }
+
+@media (max-width: 900px) {
+  .run-row-id { width: 140px; flex: 0 0 140px; }
+}
+
+/* ---------------------------------------------------------------- 提示条 */
+
+.notice {
+  border-radius: var(--radius-nested);
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface-alt);
+  color: var(--color-ink-soft);
+}
+.notice.is-error {
+  border-color: var(--color-ember);
+  color: var(--color-ember);
+  background: rgba(231, 0, 11, 0.04);
+}
+.notice.is-ok { border-color: var(--color-ink); }
+
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }

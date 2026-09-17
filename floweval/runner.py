@@ -11,9 +11,10 @@
 
 from __future__ import annotations
 
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 from .models import Case, CaseResult, EvalRun, Step, TargetResult
 from .scorers import Scorer, auto_scorers, build_scorers
@@ -44,9 +45,32 @@ class EvalRunner:
 
     # ---------------------------------------------------------------- 主入口
 
-    def run(self, cases: Sequence[Case], *, dataset: str = "unknown") -> EvalRun:
+    def run(
+        self,
+        cases: Sequence[Case],
+        *,
+        dataset: str = "unknown",
+        on_progress: Callable[[int, int], None] | None = None,
+    ) -> EvalRun:
+        """跑一轮评测。
+
+        on_progress(done, total) 每完成一条用例回调一次。Web 控制台靠它显示进度条，
+        CLI 不传就没有额外开销。回调在 worker 线程触发，实现方自己保证线程安全。
+        """
         start = time.perf_counter()
         results: list[CaseResult | None] = [None] * len(cases)
+        total = len(cases)
+        done = 0
+        done_lock = threading.Lock()
+
+        def tick() -> None:
+            nonlocal done
+            if on_progress is None:
+                return
+            with done_lock:
+                done += 1
+                current = done
+            on_progress(current, total)
 
         workers = min(self.max_workers, len(cases)) or 1
         with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -57,6 +81,7 @@ class EvalRunner:
             for future in as_completed(futures):
                 idx = futures[future]
                 results[idx] = future.result()
+                tick()
 
         run = EvalRun(
             target_name=getattr(self.target, "name", type(self.target).__name__),

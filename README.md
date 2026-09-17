@@ -43,6 +43,8 @@ python -m floweval.demo          # 一键演示：v1 基线 → v2 事故版 →
 
 demo 会用内置的"四节点智能客服"（可注入缺陷）演示完整链路，不需要任何 API key。
 
+不想写命令行？`floweval serve` 打开 Web 控制台，点选 + 填空就能跑完同样的事，见下文[控制台](#控制台不用记命令也能测)。
+
 ## 命令行
 
 ```bash
@@ -107,9 +109,30 @@ target = FunctionTarget(my_agent_function)
 写了什么断言就自动启用对应评分器，不用配 scorer 列表。内置 10 个评分器：
 `exact_match` / `similarity` / `contains` / `not_contains` / `regex` / `json_valid` / `refusal`（安全红线，权重 3.0）/ `latency` / `step_status` / `llm_judge`（无 API key 自动跳过，不污染通过率）。
 
+## 控制台：不用记命令也能测
+
+```bash
+floweval serve          # 打开 http://127.0.0.1:8765/
+```
+
+四步走完一次评测：**选被测对象 → 填连接配置 → 选/传数据集 → 点开始**。表单是按被测对象类型的配置 schema 动态渲染的——新增适配器时在 `TARGET_SCHEMAS` 里声明字段，网页表单自动跟上，前端零改动。
+
+![控制台-配置](docs/screenshots/console-01-setup.png)
+
+- **数据集**：选内置的，或上传 JSONL / 直接粘贴，保存即校验格式；
+- **基线**：选上一次的 run，跑完直接给退化清单 + 节点级退化归因；
+- **上线判定**：勾选后按通过率 / 平均分 / P95 / 成本 / 零退化给"能不能上线"的结论；
+- **进度**：任务在后台线程跑，页面轮询进度条，跑完就地渲染结果。
+
+| 评测结果（判定 + 归因） | 回归对比（v2 vs v1 基线） |
+|---|---|
+| ![控制台-结果](docs/screenshots/console-03-result.png) | ![控制台-回归](docs/screenshots/console-04-regression.png) |
+
+后端是标准库 `http.server` 实现的（无 FastAPI/Flask），继续保持"clone 下来就能跑"。API 一览：`/api/targets`、`/api/datasets`、`/api/runs`（POST 发起 / GET 列表）、`/api/runs/<id>`、`/api/runs/<id>/status`。
+
 ## 看板
 
-原生 HTML/CSS/JS 实现（无框架、无构建），支持 `--html` 导出单文件（CSS/JS/数据全内联，双击即开）或 `floweval serve` 起本地服务。
+原生 HTML/CSS/JS 实现（无框架、无构建），支持 `--html` 导出单文件（CSS/JS/数据全内联，双击即开）或 `floweval serve` 起本地服务（控制台跑完的每一次都会自动更新 `/index.html` 看板的数据）。
 
 | 用例明细（执行链路 + 评分明细） | 节点分析 |
 |---|---|
@@ -147,21 +170,23 @@ floweval/
 │   ├── storage.py         # SQLite 单文件存储
 │   ├── report.py          # 终端 / Markdown / 看板数据
 │   ├── cli.py             # 命令行入口
+│   ├── server.py          # Web 控制台后端（标准库 http.server，任务线程 + 进度轮询）
 │   └── demo.py            # 一键演示
-├── web/                   # 看板（原生 HTML/CSS/JS，shadcn 风格，无框架）
+├── web/                   # 控制台 + 看板（原生 HTML/CSS/JS，shadcn 风格，无框架）
 ├── examples/              # 示例数据集 + agentflow 工作流
-└── tests/                 # 73 个测试
+└── tests/                 # 82 个测试
 ```
 
 ## 测试
 
 ```bash
-python -m pytest tests -q     # 73 passed
+python -m pytest tests -q     # 82 passed
 ```
 
 覆盖：归因规则（含透传节点不背锅）、全部评分器、并发保序、重试、
 回归对比、上线判定各规则、SQLite 存取往返（归因在反序列化后保持一致）、
-agentflow 适配器真实集成（本机无 agentflow 时自动跳过）。
+agentflow 适配器真实集成（本机无 agentflow 时自动跳过）、
+配置 schema 规范化与进度回调（控制台后端的核心逻辑另有 API 级冒烟脚本 `scripts/smoke_console.py`）。
 
 ## 已知边界
 

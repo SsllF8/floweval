@@ -159,66 +159,25 @@ def cmd_show(args: argparse.Namespace) -> int:
 
 
 def cmd_serve(args: argparse.Namespace) -> int:
-    """启动 Web 看板。"""
-    import http.server  # noqa: PLC0415
-    import socketserver  # noqa: PLC0415
-    import threading  # noqa: PLC0415
-    import webbrowser  # noqa: PLC0415
+    """启动 Web 控制台。
 
-    root = Path(__file__).resolve().parent.parent / "web"
-    if not root.exists():
-        print(f"[error] 找不到看板目录: {root}", file=sys.stderr)
-        return EXIT_ERROR
-
-    # 把最新一次评测导出成看板可直接读取的 JSON（绕开 file:// 的 fetch 限制）
-    store = RunStore(args.db)
-    latest = store.get(args.run_id) if args.run_id else store.latest()
-    data_file = root / "data" / "latest.json"
-    data_file.parent.mkdir(parents=True, exist_ok=True)
-    if latest is not None:
-        payload = build_dashboard_payload(latest, history=store.history(limit=30))
-        data_file.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-
-    handler = _make_handler(root)
-
-    class Server(socketserver.ThreadingTCPServer):
-        allow_reuse_address = True
-        daemon_threads = True
+    和旧版只做静态展示的区别：这里起的是带 API 的服务，
+    网页上可以直接选被测对象、填配置、传数据集、发起评测、看结果。
+    """
+    from .server import start_server  # noqa: PLC0415 - 只在 serve 时才需要
 
     try:
-        with Server((args.host, args.port), handler) as httpd:
-            url = f"http://{args.host}:{args.port}/"
-            print(f"FlowEval 看板已启动: {url}")
-            print(f"数据文件: {data_file}")
-            print("按 Ctrl+C 停止")
-            if not args.no_browser:
-                threading.Timer(0.8, lambda: webbrowser.open(url)).start()
-            try:
-                httpd.serve_forever()
-            except KeyboardInterrupt:
-                print("\n已停止")
+        start_server(
+            host=args.host,
+            port=args.port,
+            db_path=args.db,
+            datasets_dir=args.datasets_dir,
+            open_browser=not args.no_browser,
+        )
     except OSError as exc:
         print(f"[error] 端口 {args.port} 无法使用: {exc}", file=sys.stderr)
         return EXIT_ERROR
     return EXIT_OK
-
-
-def _make_handler(root: Path):
-    class Handler(http.server.SimpleHTTPRequestHandler):
-        def __init__(self, *a: Any, **kw: Any) -> None:
-            super().__init__(*a, directory=str(root), **kw)
-
-        def log_message(self, fmt: str, *a: Any) -> None:  # 静音访问日志
-            pass
-
-        def end_headers(self) -> None:
-            # 关掉缓存，改了数据刷新就能看到
-            self.send_header("Cache-Control", "no-store")
-            super().end_headers()
-
-    return Handler
 
 
 def cmd_demo(args: argparse.Namespace) -> int:
@@ -297,11 +256,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_show.set_defaults(func=cmd_show)
 
     # serve
-    p_serve = sub.add_parser("serve", help="启动 Web 看板")
+    p_serve = sub.add_parser("serve", help="启动 Web 控制台（可视化跑评测）")
     p_serve.add_argument("--db", default="floweval.db")
     p_serve.add_argument("--host", default="127.0.0.1")
     p_serve.add_argument("--port", type=int, default=8765)
-    p_serve.add_argument("--run-id", dest="run_id", help="指定展示的运行记录")
+    p_serve.add_argument(
+        "--datasets-dir", default="datasets", help="上传的数据集存放目录"
+    )
     p_serve.add_argument("--no-browser", action="store_true")
     p_serve.set_defaults(func=cmd_serve)
 
