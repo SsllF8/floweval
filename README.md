@@ -86,7 +86,7 @@ class TargetResult:
 | `customer_service` | 内置演示被测对象（四节点客服流水线，可注入缺陷） |
 | `http` | 任意 HTTP 服务，`--target-config '{"url":"http://localhost:8000/ask"}'` |
 | `openai` | DeepSeek / 通义 / vLLM 等 OpenAI 兼容接口 |
-| `agentflow` | [agentflow](../agentflow) DAG 工作流，节点执行记录直接映射为归因数据（需设置环境变量 `AGENTFLOW_PATH` 指向 agentflow 项目根，或传参 `agentflow_path=...`） |
+| `agentflow` | `agentflow` DAG 工作流引擎（独立项目），节点执行记录直接映射为归因数据（需设置环境变量 `AGENTFLOW_PATH` 指向 agentflow 项目根，或传参 `agentflow_path=...`） |
 
 新增一种被测对象 = 新增一个适配器文件 + `@register("名字")`，核心代码零改动。
 
